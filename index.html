@@ -6584,34 +6584,43 @@ function buildAsciiSimple(codes) {
                 .map(function(l) { return l.trim(); })
                 .filter(function(l) { return l.length > 0; });
 
-            // Strip placeholders from a line before testing keywords,
-            // so protected regions don't hide trailing keywords.
+            // Strip protect placeholders before keyword testing so they don't
+            // hide trailing keywords (e.g. a comment placeholder after "then").
             function bare(s) { return s.replace(/\x00P\d+\x00/g, '').trim(); }
 
-            // prev line ends with something that means "continuation, use space"
-            // Covers: block-openers, operators, commas, open parens/brackets,
-            //         and single-line comment placeholders (the comment was already
-            //         removed by protect(), leaving the real code before it).
-            var rPrevSpace = /(?:^|\s)(?:then|do|else|repeat|function)\s*$|[\+\-\*\/%\^\.\.=<>~#&\|,\({\[]\s*$|(?:^|\s)(?:and|or|not|return)\s*$/;
+            // prev line ends with → use SPACE (not semicolon)
+            // Covers: operators (incl. concat ..), commas, open delimiters,
+            // block-opening keywords, continuation keywords.
+            var rPrevSpace = new RegExp(
+                '[+\\-*/%^=<>~#&|,({\\[]\\s*$' +     // trailing operator/punct
+                '|\\.\\.' +                            // concat operator
+                '|(?:^|\\s)(?:then|do|else|repeat|function)\\s*$' + // block openers
+                '|(?:^|\\s)(?:and|or|not|return)\\s*$'  // continuation keywords
+            );
 
-            // cur line starts with something that must follow a space not semicolon
-            var rCurSpace  = /^(?:then|do|else|elseif|end|until|and|or|not)\b/;
+            // cur line starts with → use SPACE (these can't follow a semicolon)
+            var rCurSpace = /^(?:then|do|else|elseif|end|until|and|or|not)\b/;
 
-            // cur line starts with a closing bracket/paren — never put ; before it
-            var rCurClose  = /^[\)\]},]/;
+            // cur line starts with a continuation token — closing delimiters,
+            // method-call colon, concat operator, binary operators at line start
+            var rCurCont = /^[\)\]},:]|^\.\.|^[+\-*/%^]/;
+
+            function needsSpace(bPrev, bCur) {
+                if (!bPrev || !bCur)         return true;
+                if (rPrevSpace.test(bPrev))  return true;
+                if (rCurSpace.test(bCur))    return true;
+                if (rCurCont.test(bCur))     return true;
+                // func call continued on next line: identifier/value followed by (
+                if (/^[(]/.test(bCur) && /[\w\d_'"\)\]]$/.test(bPrev)) return true;
+                return false;
+            }
 
             var out = '';
             for (var i = 0; i < lines.length; i++) {
                 if (i === 0) { out = lines[i]; continue; }
                 var bPrev = bare(lines[i - 1]);
                 var bCur  = bare(lines[i]);
-                var sep;
-                if (rPrevSpace.test(bPrev) || rCurSpace.test(bCur) || rCurClose.test(bCur)) {
-                    sep = ' ';
-                } else {
-                    sep = ';';
-                }
-                out += sep + lines[i];
+                out += (needsSpace(bPrev, bCur) ? ' ' : ';') + lines[i];
             }
             return restore(out, p.ph);
         }
