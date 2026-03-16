@@ -6584,19 +6584,34 @@ function buildAsciiSimple(codes) {
                 .map(function(l) { return l.trim(); })
                 .filter(function(l) { return l.length > 0; });
 
-            // Keywords after which a semicolon would break syntax
-            // (block-openers, else, elseif, until <cond>)
-            var noSemiEnd = /(?:^|\s)(?:then|do|else|repeat|end)$|^elseif\b|^else$|^until\s/;
-            var noSemiStart = /^(?:then|do|else|elseif|end|until)\b/;
+            // Strip placeholders from a line before testing keywords,
+            // so protected regions don't hide trailing keywords.
+            function bare(s) { return s.replace(/\x00P\d+\x00/g, '').trim(); }
+
+            // prev line ends with something that means "continuation, use space"
+            // Covers: block-openers, operators, commas, open parens/brackets,
+            //         and single-line comment placeholders (the comment was already
+            //         removed by protect(), leaving the real code before it).
+            var rPrevSpace = /(?:^|\s)(?:then|do|else|repeat|function)\s*$|[\+\-\*\/%\^\.\.=<>~#&\|,\({\[]\s*$|(?:^|\s)(?:and|or|not|return)\s*$/;
+
+            // cur line starts with something that must follow a space not semicolon
+            var rCurSpace  = /^(?:then|do|else|elseif|end|until|and|or|not)\b/;
+
+            // cur line starts with a closing bracket/paren — never put ; before it
+            var rCurClose  = /^[\)\]},]/;
 
             var out = '';
             for (var i = 0; i < lines.length; i++) {
                 if (i === 0) { out = lines[i]; continue; }
-                var prev = lines[i - 1];
-                var cur  = lines[i];
-                // Use space if prev ends with a block keyword or cur starts with one
-                var sep = (noSemiEnd.test(prev) || noSemiStart.test(cur)) ? ' ' : ';';
-                out += sep + cur;
+                var bPrev = bare(lines[i - 1]);
+                var bCur  = bare(lines[i]);
+                var sep;
+                if (rPrevSpace.test(bPrev) || rCurSpace.test(bCur) || rCurClose.test(bCur)) {
+                    sep = ' ';
+                } else {
+                    sep = ';';
+                }
+                out += sep + lines[i];
             }
             return restore(out, p.ph);
         }
