@@ -271,6 +271,7 @@
                 <option value="unicode">Unicode Lookalike &#8212; Cyrillic/Latin</option>
                 <option value="hex">Hex Encoded &#8212; _0x1A2B style</option>
                 <option value="long">Long Noise &#8212; extended junk names</option>
+                <option value="prometheus">Prometheus &#8212; v1/v2/v3 style names</option>
             </select>
             <label style="font-weight:normal; display:inline; margin:0;">Scope:</label>
             <select id="vroScope">
@@ -284,6 +285,7 @@
             <b>Unicode Lookalike</b>: Menggunakan huruf Cyrillic/Latin yang identik visual dengan ASCII &#8212; beda karakter, tampak sama.
             <b>Hex Encoded</b>: Nama variabel diganti dengan format <code style="color:#9cdcfe">_0x[hash]</code> &#8212; gaya khas obfuscator JS/Lua profesional.
             <b>Long Noise</b>: Nama variabel diperpanjang dengan karakter acak panjang 20&#8211;40 char &#8212; mempersulit pembacaan sekilas.
+            <b>Prometheus</b>: Nama variabel bergaya Prometheus obfuscator &mdash; kombinasi prefix <code style="color:#9cdcfe">prometheus_</code> + counter terenkripsi, mirip output Prometheus v1/v2/v3.
         </div>
     </div>
 
@@ -3771,6 +3773,8 @@
                 desc.innerHTML = `<b>Unicode Lookalike</b>: Menggunakan huruf Cyrillic/Latin yang identik visual dengan ASCII &#8212; beda codepoint, tampak sama di layar. Mempersulit copy-paste dan analisis.`;
             } else if (this.value === 'hex') {
                 desc.innerHTML = `<b>Hex Encoded</b>: Nama variabel diganti dengan format <code style="color:#9cdcfe">_0x[hash]</code> &#8212; gaya khas obfuscator profesional JS/Lua. Sulit dibaca manusia.`;
+            } else if (this.value === 'prometheus') {
+                desc.innerHTML = `<b>Prometheus</b>: Nama variabel bergaya Prometheus obfuscator &mdash; kombinasi prefix <code style="color:#9cdcfe">prometheus_</code> + counter terenkripsi, mirip output Prometheus v1/v2/v3.`;
             } else {
                 desc.innerHTML = `<b>Long Noise</b>: Nama variabel diperpanjang dengan karakter underscore/l/I acak panjang 20&#8211;40 char &#8212; merusak readability secara visual.`;
             }
@@ -4371,6 +4375,43 @@
             let n = '_';
             for (let i = 0; i < len; i++) n += pool[ri(0, pool.length - 1)];
             return n;
+        } else if (style === 'prometheus') {
+            // Prometheus obfuscator style: prometheus_<encoded_counter>
+            // Encodes counter into a base-26 lowercase alpha string, then
+            // optionally wraps with v2-style double-underscore segments.
+            const variant = ri(0, 2); // 0=v1, 1=v2, 2=v3
+            // encode counter to alpha string (a..z base-26)
+            function encodeCounter(n) {
+                const chars = 'abcdefghijklmnopqrstuvwxyz';
+                let s = '';
+                n = n + 1;
+                while (n > 0) {
+                    s = chars[(n - 1) % 26] + s;
+                    n = Math.floor((n - 1) / 26);
+                }
+                // pad to at least 3 chars
+                while (s.length < 3) s = 'a' + s;
+                return s;
+            }
+            // add random salt suffix (3-6 lowercase chars)
+            function salt(len) {
+                const chars = 'abcdefghijklmnopqrstuvwxyz';
+                let s = '';
+                for (let i = 0; i < len; i++) s += chars[ri(0, 25)];
+                return s;
+            }
+            const enc = encodeCounter(counter);
+            if (variant === 0) {
+                // v1: prometheus_<enc><salt>
+                return 'prometheus_' + enc + salt(ri(3, 5));
+            } else if (variant === 1) {
+                // v2: __<enc>__<salt>__ (double underscore segments)
+                return '__' + enc + '__' + salt(ri(2, 4)) + '__';
+            } else {
+                // v3: _P<COUNTER_HEX>_<salt> (uppercase hex counter)
+                const hexC = counter.toString(16).toUpperCase().padStart(4, '0');
+                return '_P' + hexC + '_' + salt(ri(3, 5));
+            }
         } else if (style === 'unicode') {
             // Start with normal rv() name, then substitute chars with lookalikes
             let base = rv(8, 14);
