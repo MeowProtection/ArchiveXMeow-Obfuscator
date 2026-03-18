@@ -285,7 +285,7 @@
             <b>Unicode Lookalike</b>: Menggunakan huruf Cyrillic/Latin yang identik visual dengan ASCII &#8212; beda karakter, tampak sama.
             <b>Hex Encoded</b>: Nama variabel diganti dengan format <code style="color:#9cdcfe">_0x[hash]</code> &#8212; gaya khas obfuscator JS/Lua profesional.
             <b>Long Noise</b>: Nama variabel diperpanjang dengan karakter acak panjang 20&#8211;40 char &#8212; mempersulit pembacaan sekilas.
-            <b>Prometheus</b>: Nama variabel bergaya semua obfuscator Lua populer &mdash; Prometheus v1/v2/v3/v4, IronBrew2, Moonsec, Luraph, ByteCode, dan Short Hash &mdash; dipilih acak per variabel.
+            <b>Prometheus</b>: Nama variabel bergaya semua obfuscator Lua populer &mdash; Prometheus v1/v2/v3/v4, IronBrew2, Moonsec, Luraph, ByteCode, Short Hash, <b>Moonveil</b>, Synapse X, DarkLuau, Aztupbyte, Codify, Hyperion, ByteLua, Obfio, PSU, LuaShield, Natro, RobloxVM, Cipher, AllCaps, SnakeHash &mdash; dipilih acak per variabel.
         </div>
     </div>
 
@@ -3774,7 +3774,9 @@
             } else if (this.value === 'hex') {
                 desc.innerHTML = `<b>Hex Encoded</b>: Nama variabel diganti dengan format <code style="color:#9cdcfe">_0x[hash]</code> &#8212; gaya khas obfuscator profesional JS/Lua. Sulit dibaca manusia.`;
             } else if (this.value === 'prometheus') {
-                desc.innerHTML = `<b>Prometheus</b>: Nama variabel bergaya semua obfuscator Lua populer &mdash; <b>Prometheus v1</b> <code style="color:#9cdcfe">prometheus_aabxk</code>, <b>v2</b> <code style="color:#9cdcfe">__aab__xyz__</code>, <b>v3</b> <code style="color:#9cdcfe">_P001F_kqr</code>, <b>v4/GJDB</b> <code style="color:#9cdcfe">GJDB_001F_xy</code>, <b>IronBrew2</b> <code style="color:#9cdcfe">LlIlI1lILl</code>, <b>Moonsec</b> <code style="color:#9cdcfe">MOON_003ab</code>, <b>Luraph</b> <code style="color:#9cdcfe">XkQmRnPvLt</code>, <b>ByteCode</b> <code style="color:#9cdcfe">_b0xDEAD</code>, <b>Short Hash</b> <code style="color:#9cdcfe">_a1b2c</code> &mdash; dipilih acak per variabel.`;
+                desc.innerHTML = `<b>Prometheus</b>: 24 style nama variabel dari semua obfuscator Lua populer, dipilih acak per variabel &mdash;<br>
+                <code style="color:#9cdcfe">prometheus_aabxk</code> · <code style="color:#9cdcfe">__aab__xyz__</code> · <code style="color:#9cdcfe">_P001F_kqr</code> · <code style="color:#9cdcfe">GJDB_001F_xy</code> · <code style="color:#9cdcfe">LlIlI1lILl</code> · <code style="color:#9cdcfe">MOON_003ab</code> · <code style="color:#9cdcfe">XkQmRnPvLt</code> · <code style="color:#9cdcfe">_b0xDEAD</code> · <code style="color:#9cdcfe">_a1b2c</code><br>
+                <code style="color:#ce9178">moonveil_001F</code> · <code style="color:#ce9178">_SNC_x3kf</code> · <code style="color:#ce9178">dark_0x1A2B</code> · <code style="color:#ce9178">aztup_aab</code> · <code style="color:#ce9178">codify_003</code> · <code style="color:#ce9178">HYPR_001F</code> · <code style="color:#ce9178">BL_0xDEAD</code> · <code style="color:#ce9178">_0xa1b2c3</code> · <code style="color:#ce9178">psu_001F</code> · <code style="color:#ce9178">ls_aabxy</code> · <code style="color:#ce9178">natro_001F</code> · <code style="color:#ce9178">_VM003</code> · <code style="color:#ce9178">cph_001F</code> · <code style="color:#ce9178">XVAR_AB3F</code> · <code style="color:#ce9178">var_xy_003</code>`;
             } else {
                 desc.innerHTML = `<b>Long Noise</b>: Nama variabel diperpanjang dengan karakter underscore/l/I acak panjang 20&#8211;40 char &#8212; merusak readability secara visual.`;
             }
@@ -4376,82 +4378,117 @@
             for (let i = 0; i < len; i++) n += pool[ri(0, pool.length - 1)];
             return n;
         } else if (style === 'prometheus') {
-            // All known Lua obfuscator variable naming styles, picked randomly
-            const variant = ri(0, 8);
+            // All known Lua obfuscator variable naming styles — picked randomly per variable
+            const variant = ri(0, 23);
 
-            // base-26 encode counter → "aab", "aac", ...
             function encodeCounter(n) {
-                const chars = 'abcdefghijklmnopqrstuvwxyz';
+                const c = 'abcdefghijklmnopqrstuvwxyz';
                 let s = ''; n = n + 1;
-                while (n > 0) { s = chars[(n-1) % 26] + s; n = Math.floor((n-1) / 26); }
+                while (n > 0) { s = c[(n-1)%26] + s; n = Math.floor((n-1)/26); }
                 while (s.length < 3) s = 'a' + s;
                 return s;
             }
-            function saltLow(n) { // n lowercase letters
-                const c = 'abcdefghijklmnopqrstuvwxyz';
-                let s = ''; for (let i=0;i<n;i++) s += c[ri(0,25)]; return s;
-            }
-            function saltUp(n) { // n uppercase letters
-                const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let s = ''; for (let i=0;i<n;i++) s += c[ri(0,25)]; return s;
-            }
-            function saltAlnum(n) { // n alphanumeric
-                const c = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let s = ''; for (let i=0;i<n;i++) s += c[ri(0,61)]; return s;
-            }
-            function randHex(n) { // n hex chars uppercase
-                let s = ''; for (let i=0;i<n;i++) s += '0123456789ABCDEF'[ri(0,15)]; return s;
-            }
+            function saltLow(n)   { const c='abcdefghijklmnopqrstuvwxyz'; let s=''; for(let i=0;i<n;i++) s+=c[ri(0,25)]; return s; }
+            function saltUp(n)    { const c='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=''; for(let i=0;i<n;i++) s+=c[ri(0,25)]; return s; }
+            function saltAlnum(n) { const c='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; let s=''; for(let i=0;i<n;i++) s+=c[ri(0,61)]; return s; }
+            function randHex(n)   { let s=''; for(let i=0;i<n;i++) s+='0123456789ABCDEF'[ri(0,15)]; return s; }
+            function padCtr(n,w)  { return String(n).padStart(w,'0'); }
 
-            const enc = encodeCounter(counter);
-            const hexC = counter.toString(16).toUpperCase().padStart(4, '0');
+            const enc  = encodeCounter(counter);
+            const hexC = counter.toString(16).toUpperCase().padStart(4,'0');
+            const ctr3 = padCtr(counter, 3);
 
-            if (variant === 0) {
-                // Prometheus v1 — prometheus_<enc><salt>
-                return 'prometheus_' + enc + saltLow(ri(2,4));
+            switch (variant) {
+                case 0:  // Prometheus v1 — prometheus_<enc><salt>
+                    return 'prometheus_' + enc + saltLow(ri(2,4));
+                case 1:  // Prometheus v2 — __<enc>__<salt>__
+                    return '__' + enc + '__' + saltLow(ri(2,4)) + '__';
+                case 2:  // Prometheus v3 — _P<HEX>_<salt>
+                    return '_P' + hexC + '_' + saltLow(ri(2,4));
+                case 3: { // Prometheus v4 / GJDB — PREFIX_<HEX>_<salt>
+                    const pf4 = ['GJDB','PROM','RXCV','LZMA','VARS','OBFX','WKFN','HDST','QTNP','MCVR'][ri(0,9)];
+                    return pf4 + '_' + hexC + '_' + saltLow(ri(1,3));
+                }
+                case 4: { // IronBrew2 — long homoglyph mix L/l/I/1/i
+                    const ibp = ['L','l','I','1','i','lI','Il','LI','Ll','iI','1I','lI1'];
+                    let n = 'L';
+                    for (let i=0; i<14+ri(0,6); i++) n += ibp[ri(0,ibp.length-1)];
+                    return n;
+                }
+                case 5: { // Moonsec — UPPER prefix + zero-padded counter
+                    const msp = ['M00N','MOON','MS','MSC','MV','M_','_M'][ri(0,6)];
+                    return msp + '_' + ctr3 + saltLow(ri(1,3));
+                }
+                case 6: { // Luraph-style — mixed-case alnum, starts uppercase
+                    const lc = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    let n = lc[ri(26,51)];
+                    for (let i=0; i<9+ri(0,8); i++) n += saltAlnum(1);
+                    return n;
+                }
+                case 7:  // ByteCode / _b0x style
+                    return '_b0x' + randHex(ri(4,6));
+                case 8:  // Short Hash — _<4-7 alnum>
+                    return '_' + saltAlnum(ri(4,7));
 
-            } else if (variant === 1) {
-                // Prometheus v2 — __<enc>__<salt>__
-                return '__' + enc + '__' + saltLow(ri(2,4)) + '__';
-
-            } else if (variant === 2) {
-                // Prometheus v3 — _P<HEX>_<salt>
-                return '_P' + hexC + '_' + saltLow(ri(2,4));
-
-            } else if (variant === 3) {
-                // Prometheus v4 / GJDB-style — XXXX_<counter>_<salt>
-                // 4-letter uppercase prefix (randomised per session via counter seed)
-                const prefixes = ['GJDB','PROM','RXCV','LZMA','VARS','OBFX','WKFN','HDST','QTNP','MCVR'];
-                const pfx = prefixes[ri(0, prefixes.length-1)];
-                return pfx + '_' + hexC + '_' + saltLow(ri(2,3));
-
-            } else if (variant === 4) {
-                // IronBrew2 — long homoglyph mix (l/I/1, case-mixed)
-                const ibPool = ['L','l','I','1','i','lI','Il','LI','Ll','iI','1I','lI1'];
-                let n = 'L';
-                for (let i = 0; i < 14 + ri(0,6); i++) n += ibPool[ri(0, ibPool.length-1)];
-                return n;
-
-            } else if (variant === 5) {
-                // Moonsec — UPPER short prefix + 3-digit zero-padded counter
-                const msPfx = ['M00N','MOON','MS','MSC','MV','M_','_M'][ri(0,6)];
-                return msPfx + '_' + String(counter).padStart(3,'0') + saltLow(ri(1,3));
-
-            } else if (variant === 6) {
-                // Luraph-style — random mixed-case alphanumeric, 10-18 chars
-                // starts with uppercase letter (matches Luraph decompiler output names)
-                const c = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                let n = c[ri(26,51)]; // start uppercase
-                for (let i = 0; i < 9 + ri(0,8); i++) n += saltAlnum(1);
-                return n;
-
-            } else if (variant === 7) {
-                // ByteCode / _b0x style — _b0x<HEX>
-                return '_b0x' + randHex(ri(4,6));
-
-            } else {
-                // Short hash — _<4-7 alnum> (compact, used by many small obfuscators)
-                return '_' + saltAlnum(ri(4,7));
+                // ── NEW STYLES ──────────────────────────────────────────────
+                case 9: { // Moonveil — moonveil_ or mv_ prefix + base62/hex
+                    const mvP = ['moonveil_','mv_','_mv_','Mv_','MV_'][ri(0,4)];
+                    return mvP + (ri(0,1) ? hexC + saltLow(ri(1,3)) : saltLow(ri(3,5)) + ctr3);
+                }
+                case 10: { // Synapse X / SNC — _SNC_ or _SX_ + alnum
+                    const sxP = ['_SNC_','_SX_','_snc_','_sx_','SNC_'][ri(0,4)];
+                    return sxP + saltAlnum(ri(3,5));
+                }
+                case 11: { // DarkLuau — dark_ prefix + hex or alnum
+                    const dkP = ['dark_','_dark_','darkvar_','DK_','_DK_'][ri(0,4)];
+                    return dkP + (ri(0,1) ? '0x'+randHex(4) : saltLow(ri(2,4))+ctr3);
+                }
+                case 12: { // Aztupbyte — az_ or aztup_ prefix
+                    const azP = ['az_','aztup_','_az_','_aztup_','AZ_'][ri(0,4)];
+                    return azP + enc + saltLow(ri(1,3));
+                }
+                case 13: { // Codify — cod_ or codify_ prefix
+                    const cdP = ['cod_','codify_','_cod_','_codify_','COD_'][ri(0,4)];
+                    return cdP + (ri(0,1) ? ctr3 : enc) + saltLow(ri(1,2));
+                }
+                case 14: { // Hyperion (Roblox) — HYPR_ or hyp_ prefix
+                    const hyP = ['HYPR_','hyp_','_hyp_','H_','_HYPR_'][ri(0,4)];
+                    return hyP + (ri(0,1) ? hexC : ctr3 + saltLow(ri(1,2)));
+                }
+                case 15: { // ByteLua — BL_ or byte_ prefix
+                    const blP = ['BL_','byte_','_BL_','_byte_','ByteLua_'][ri(0,4)];
+                    return blP + (ri(0,1) ? '0x'+randHex(4) : enc + saltLow(ri(1,2)));
+                }
+                case 16: // Obfuscator.io port — _0x + longer hex (lowercase)
+                    return '_0x' + randHex(ri(4,6)).toLowerCase();
+                case 17: { // PSU / PseudoCode — psu_ or PSU_ prefix
+                    const psP = ['psu_','_psu_','PSU_','_PSU_','ps_'][ri(0,4)];
+                    return psP + (ri(0,1) ? hexC : ctr3 + saltLow(ri(1,2)));
+                }
+                case 18: { // LuaShield — ls_ or shield_ prefix
+                    const lsP = ['ls_','_ls_','shield_','LS_','_shield_'][ri(0,4)];
+                    return lsP + enc + saltLow(ri(1,3));
+                }
+                case 19: { // Natro — natro_ or NAT_ prefix
+                    const ntP = ['natro_','_natro_','NAT_','_NAT_','nat_'][ri(0,4)];
+                    return ntP + (ri(0,1) ? hexC : enc) + saltLow(ri(1,2));
+                }
+                case 20: { // Roblox VM style — _VM or VM_ prefix
+                    const vmP = ['_VM','_vm_','VM_','_VM_','vm_'][ri(0,4)];
+                    return vmP + (ri(0,1) ? ctr3 : hexC) + saltLow(ri(0,2));
+                }
+                case 21: { // Cipher / CipherLua — cph_ or CPH_ prefix
+                    const cpP = ['cph_','_cph_','CPH_','_CPH_','cipher_'][ri(0,4)];
+                    return cpP + (ri(0,1) ? hexC : enc) + saltLow(ri(1,2));
+                }
+                case 22: { // All-caps generic — XVAR_ or VAR_ + alnum
+                    const caps = ['XVAR_','VAR_','_VAR_','V_','XV_','RVAR_','UVAR_'][ri(0,6)];
+                    return caps + saltUp(ri(1,2)) + randHex(ri(2,3));
+                }
+                default: { // Snake_case_hash — all lowercase + numbers
+                    const snkP = ['var_','x_','v_','_v_','_x_'][ri(0,4)];
+                    return snkP + saltLow(ri(2,3)) + '_' + ctr3;
+                }
             }
         } else if (style === 'unicode') {
             // Start with normal rv() name, then substitute chars with lookalikes
